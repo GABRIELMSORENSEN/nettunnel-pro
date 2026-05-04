@@ -110,3 +110,154 @@ temp/
 
 # Manus version file (auto-generated, not part of source)
 client/public/__manus__/version.json
+
+# Android build outputs
+android/.gradle/
+android/local.properties
+android/build/
+android/app/build/
+android/app/release/
+android/app/debug/
+android/.idea/
+android/*.iml
+android/*.apk
+android/*.aab
+android/captures/
+android/.externalNativeBuild/
+android/.cxx/
+android/gradle/wrapper/gradle-wrapper.jar
+
+# Gradle
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Capacitor
+capacitor/
+.capacitor/
+
+# Xray build artifacts
+libXray.so
+libXray.a
+xray
+xray.exe
+*.o
+*.a
+*.so
+
+# Xray configuration backups
+xray-config-backup.json
+geoip.dat
+geosite.dat
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Sensitive data
+*.keystore
+*.jks
+release.keystore
+debug.keystore
+
+# Certificates and keys
+*.pem
+*.key
+*.crt
+*.cert
+
+# macOS specific
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+
+# Linux specific
+.directory
+
+# Windows specific
+ehthumbs.db
+Desktop.ini
+
+# Project specific
+.manus-logs/
+screenshots/
+*.bak
+*.backup
+
+# Vite
+.vite/
+
+# Turbo
+.turbo/
+
+# pnpm
+.pnpmfile.cjs
+pnpm-workspace.yaml
+
+# Playwright
+.playwright/
+
+# Testing
+.jest/
+.mocha/
+
+# Android Studio specific
+.idea/
+*.iml
+*.apk
+*.aar
+*.ap_
+*.aab
+
+# Lint results
+lint-results.xml
+lint-results-release-report.html
+
+# Generated files
+gen/
+out/
+
+# Google Services (if using Firebase)
+google-services.json
+
+# Signing files
+signing.properties
+
+# Playwright
+.playwright/
+
+# Testing
+.jest/
+.mocha/
+
+# Android Studio specific
+.idea/
+*.iml
+*.apk
+*.aar
+*.ap_
+*.aab
+
+# Lint results
+lint-results.xml
+lint-results-release-report.html
+
+# Generated files
+gen/
+out/
+
+# Google Services (if using Firebase)
+google-services.json
+
+# Signing files
+signing.properties
