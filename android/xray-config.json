@@ -1,0 +1,103 @@
+{
+  "log": {
+    "loglevel": "warning",
+    "access": "/data/data/com.nettunnelpro.vpn/cache/access.log",
+    "error": "/data/data/com.nettunnelpro.vpn/cache/error.log"
+  },
+  "inbounds": [
+    {
+      "protocol": "socks",
+      "port": 10808,
+      "settings": {
+        "auth": "noauth",
+        "udp": true
+      },
+      "tag": "socks-in"
+    },
+    {
+      "protocol": "http",
+      "port": 10809,
+      "tag": "http-in"
+    }
+  ],
+  "outbounds": [
+    {
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "br-sp-01.nettunnel.pro",
+            "port": 443,
+            "users": [
+              {
+                "id": "a3c14198-dc1f-40a3-9d4a-8c37609f59f2",
+                "encryption": "none"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "ws",
+        "security": "tls",
+        "tlsSettings": {
+          "serverName": "portalrecarga.vivo.com.br",
+          "allowInsecure": false,
+          "alpn": ["h2", "http/1.1"]
+        },
+        "wsSettings": {
+          "path": "/",
+          "headers": {
+            "Host": "br-sp-01.nettunnel.pro"
+          }
+        },
+        "sockopt": {
+          "fragment": {
+            "packets": "1-3",
+            "length": "10-20"
+          }
+        }
+      },
+      "tag": "vless-out"
+    },
+    {
+      "protocol": "freedom",
+      "tag": "direct"
+    },
+    {
+      "protocol": "blackhole",
+      "tag": "block"
+    }
+  ],
+  "routing": {
+    "domainStrategy": "AsIs",
+    "rules": [
+      {
+        "type": "field",
+        "domain": [
+          "geosite:cn",
+          "geosite:private"
+        ],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "ip": [
+          "geoip:private",
+          "geoip:cn"
+        ],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "outboundTag": "vless-out"
+      }
+    ]
+  },
+  "dns": {
+    "servers": [
+      "8.8.8.8",
+      "8.8.4.4"
+    ]
+  }
+}
