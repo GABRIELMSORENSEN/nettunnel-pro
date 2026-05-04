@@ -1,0 +1,39 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Validate commit message format
+# Allowed formats:
+# feat: description
+# fix: description
+# docs: description
+# style: description
+# refactor: description
+# perf: description
+# test: description
+# chore: description
+
+commit_msg=$(cat "$1")
+
+# Allow Manus checkpoint messages
+if echo "$commit_msg" | grep -qE "^(Checkpoint|feat|fix|docs|style|refactor|perf|test|chore|ci|build)"; then
+  exit 0
+fi
+
+if ! echo "$commit_msg" | grep -qE "^(feat|fix|docs|style|refactor|perf|test|chore|ci|build)(\(.+\))?!?: .{1,}"; then
+  echo "❌ Commit message format inválido!"
+  echo ""
+  echo "Formatos aceitos:"
+  echo "  feat: description"
+  echo "  fix: description"
+  echo "  docs: description"
+  echo "  style: description"
+  echo "  refactor: description"
+  echo "  perf: description"
+  echo "  test: description"
+  echo "  chore: description"
+  echo ""
+  echo "Exemplo:"
+  echo "  feat: add connection node animations"
+  echo "  fix(android): resolve VPN permission issue"
+  exit 1
+fi
