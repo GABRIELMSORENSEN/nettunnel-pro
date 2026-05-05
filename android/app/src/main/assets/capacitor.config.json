@@ -1,0 +1,13 @@
+{
+	"appId": "com.nettunnel.pro",
+	"appName": "NetTunnel Pro",
+	"webDir": "dist",
+	"server": {
+		"androidScheme": "https"
+	},
+	"plugins": {
+		"SplashScreen": {
+			"launchShowDuration": 0
+		}
+	}
+}
