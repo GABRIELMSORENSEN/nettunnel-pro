@@ -568,3 +568,22 @@ export function getSNIWithAutoFallback(carrierId: string): SNIConfig[] {
 
   return carrier.snis.filter((sni) => sni.autoFallback === true);
 }
+
+export function getCarrierById(carrierId: string): CarrierConfig | undefined {
+  return CARRIERS_DATABASE.find((c) => c.id === carrierId);
+}
+
+export function getServerById(carrierId: string, serverId: string): ServerConfig | undefined {
+  const carrier = getCarrierById(carrierId);
+  if (!carrier) return undefined;
+  return carrier.servers.find((s) => s.id === serverId);
+}
+
+export function getAllServers(): ServerConfig[] {
+  return CARRIERS_DATABASE.flatMap((c) => c.servers);
+}
+
+export function getServersByCarrier(carrierId: string): ServerConfig[] {
+  const carrier = getCarrierById(carrierId);
+  return carrier?.servers || [];
+}
