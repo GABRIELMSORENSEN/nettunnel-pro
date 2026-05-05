@@ -234,6 +234,34 @@ google-services.json
 # Signing files
 signing.properties
 
+# Service Account and Credentials
+*-service-account.json
+*-credentials.json
+google-play-service-account.json
+service-account.json
+
+# GitHub tokens and secrets
+github-token.txt
+*.token
+
+# API keys and secrets
+.secrets/
+secrets.json
+*.secret
+
+# Backup and recovery files
+*.backup
+*.bak
+*.restore
+
+# Temporary files
+*.tmp
+*.temp
+
+# IDE secrets
+.vscode/settings.local.json
+.idea/runConfigurations/
+
 # Playwright
 .playwright/
 
@@ -262,3 +290,31 @@ google-services.json
 
 # Signing files
 signing.properties
+
+# Service Account and Credentials
+*-service-account.json
+*-credentials.json
+google-play-service-account.json
+service-account.json
+
+# GitHub tokens and secrets
+github-token.txt
+*.token
+
+# API keys and secrets
+.secrets/
+secrets.json
+*.secret
+
+# Backup and recovery files
+*.backup
+*.bak
+*.restore
+
+# Temporary files
+*.tmp
+*.temp
+
+# IDE secrets
+.vscode/settings.local.json
+.idea/runConfigurations/
