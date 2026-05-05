@@ -21,7 +21,8 @@ import {
   FileJson,
   Trash2,
   X,
-  LogOut
+  LogOut,
+  TrendingUp
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
@@ -35,6 +36,7 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { useLocation } from 'wouter';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -78,6 +80,7 @@ const PAYLOADS: Payload[] = [
 
 export default function Home() {
   const { user, logout } = useAuth();
+  const [, setLocation] = useLocation();
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [selectedServer, setSelectedServer] = useState(SERVERS[0]);
@@ -349,6 +352,13 @@ export default function Home() {
             </label>
             <button onClick={exportConfig} className="p-2 hover:bg-white/5 rounded-full transition-colors" title="Export Config">
               <Download className="w-5 h-5 text-[#8E9299]" />
+            </button>
+            <button 
+              onClick={() => setLocation('/analytics')}
+              className="p-2 hover:bg-white/5 rounded-full transition-colors"
+              title="Analytics"
+            >
+              <TrendingUp className="w-5 h-5 text-[#8E9299]" />
             </button>
             <button 
               onClick={() => setIsSettingsModalOpen(true)}
