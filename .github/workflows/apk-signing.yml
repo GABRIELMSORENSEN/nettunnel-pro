@@ -1,0 +1,129 @@
+name: APK Signing & Release
+
+on:
+  workflow_run:
+    workflows: ["CI/CD Pipeline"]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  sign-and-release:
+    name: Sign APK & Create Release
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Download APK artifacts
+        uses: actions/github-script@v6
+        with:
+          script: |
+            let allArtifacts = await github.rest.actions.listWorkflowRunArtifacts({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               run_id: context.payload.workflow_run.id,
+            });
+            let matchArtifact = allArtifacts.data.artifacts.filter((artifact) => {
+              return artifact.name == "apk-artifacts"
+            })[0];
+            let download = await github.rest.actions.downloadArtifact({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               artifact_id: matchArtifact.id,
+               archive_format: 'zip',
+            });
+            let fs = require('fs');
+            fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/apk-artifacts.zip`, Buffer.from(download.data));
+      
+      - name: Extract APK artifacts
+        run: |
+          unzip apk-artifacts.zip -d apk-artifacts
+          ls -la apk-artifacts/
+      
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+      
+      - name: Sign APK
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          # Decode keystore
+          echo "$KEYSTORE_BASE64" | base64 -d > keystore.jks
+          
+          # Find and sign APK
+          for apk in apk-artifacts/**/*.apk; do
+            if [[ "$apk" == *"release"* ]]; then
+              echo "Signing: $apk"
+              jarsigner -verbose \
+                -sigalg SHA256withRSA \
+                -digestalg SHA-256 \
+                -keystore keystore.jks \
+                -storepass "$KEYSTORE_PASSWORD" \
+                -keypass "$KEY_PASSWORD" \
+                "$apk" "$KEY_ALIAS"
+              
+              # Verify signature
+              jarsigner -verify -verbose -certs "$apk"
+            fi
+          done
+      
+      - name: Align APK
+        run: |
+          for apk in apk-artifacts/**/*.apk; do
+            if [[ "$apk" == *"release"* ]]; then
+              echo "Aligning: $apk"
+              zipalign -v 4 "$apk" "${apk%.apk}-aligned.apk"
+              mv "${apk%.apk}-aligned.apk" "$apk"
+            fi
+          done
+      
+      - name: Upload signed APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: signed-apk
+          path: apk-artifacts/**/*.apk
+          retention-days: 90
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: apk-artifacts/**/*.apk
+          tag_name: v${{ github.run_number }}
+          release_name: NetTunnel Pro v${{ github.run_number }}
+          body: |
+            ## Release Notes
+            
+            ### 🎉 New Release
+            - **Version**: v${{ github.run_number }}
+            - **Commit**: ${{ github.sha }}
+            - **Branch**: main
+            
+            ### 📦 Artifacts
+            - Release APK (signed and aligned)
+            - Debug APK
+            
+            ### ✅ Tests Passed
+            - Frontend tests
+            - Backend tests
+            - Android lint
+            - Security scan
+            
+            ### 🚀 Installation
+            1. Download the signed APK
+            2. Enable installation from unknown sources
+            3. Install the APK on your Android device
+            
+            ### 📝 Changelog
+            See CHANGELOG.md for detailed changes
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
