@@ -3,10 +3,12 @@
  * 
  * Comprehensive database of Brazilian carriers with multiple SNI configurations,
  * payload methods, and connection parameters for zero-rating and DPI bypass.
+ * 
+ * Updated with DNSTT, UDP/53, and advanced reliability features.
  */
 
-export type ConnectionMethod = 'vless' | 'vmess' | 'trojan' | 'ss' | 'ssr';
-export type PayloadMethod = 'http' | 'tls' | 'websocket' | 'fragment' | 'mixed';
+export type ConnectionMethod = 'vless' | 'vmess' | 'trojan' | 'ss' | 'ssr' | 'dnstt' | 'udp53';
+export type PayloadMethod = 'http' | 'tls' | 'websocket' | 'fragment' | 'mixed' | 'dnstt' | 'udp53';
 export type NetworkType = 'wifi' | '4g' | '5g' | 'all';
 
 export interface PayloadConfig {
@@ -18,6 +20,8 @@ export interface PayloadConfig {
     length: string;
   };
   obfuscation?: string;
+  dnsServer?: string; // For DNSTT/UDP53
+  port?: number; // For UDP53
 }
 
 export interface SNIConfig {
@@ -27,6 +31,8 @@ export interface SNIConfig {
   priority: number; // 1-10, higher = better
   lastTested?: Date;
   successRate?: number; // 0-100
+  keepAliveInterval?: number; // seconds
+  autoFallback?: boolean; // Enable SNI scanning
 }
 
 export interface ServerConfig {
@@ -38,7 +44,7 @@ export interface ServerConfig {
   uuid?: string;
   password?: string;
   encryption?: string;
-  network: 'ws' | 'tcp' | 'kcp' | 'quic';
+  network: 'ws' | 'tcp' | 'kcp' | 'quic' | 'udp';
   tls: boolean;
   region: string;
   country: string;
@@ -47,6 +53,8 @@ export interface ServerConfig {
   load: number;
   bandwidth: string;
   uptime: number; // percentage
+  keepAliveEnabled?: boolean;
+  captivePortalBypass?: boolean;
 }
 
 export interface CarrierConfig {
@@ -59,6 +67,7 @@ export interface CarrierConfig {
   description: string;
   coverage: string;
   notes: string;
+  dnsServers?: string[]; // For DNSTT/UDP53
 }
 
 // ============================================================================
@@ -88,8 +97,18 @@ const VIVO_SNIS: SNIConfig[] = [
         host: 'portalrecarga.vivo.com.br',
         path: '/ws',
       },
+      {
+        method: 'dnstt',
+        dnsServer: 'dns.vivo.com.br',
+      },
+      {
+        method: 'udp53',
+        port: 53,
+      },
     ],
     successRate: 95,
+    keepAliveInterval: 20,
+    autoFallback: true,
   },
   {
     domain: 'vivo.com.br',
@@ -99,44 +118,57 @@ const VIVO_SNIS: SNIConfig[] = [
       {
         method: 'http',
         host: 'vivo.com.br',
+        path: '/',
       },
       {
-        method: 'fragment',
-        fragment: {
-          packets: '2-4',
-          length: '15-25',
-        },
+        method: 'tls',
+      },
+      {
+        method: 'dnstt',
+        dnsServer: 'dns.vivo.com.br',
       },
     ],
     successRate: 88,
+    keepAliveInterval: 20,
+    autoFallback: true,
   },
   {
-    domain: 'meusvivo.vivo.com.br',
-    description: 'Vivo app portal',
+    domain: 'meuvivo.vivo.com.br',
+    description: 'Vivo My Account portal',
     priority: 8,
     payloads: [
       {
+        method: 'http',
+        host: 'meuvivo.vivo.com.br',
+        path: '/',
+      },
+      {
         method: 'tls',
-        fragment: {
-          packets: '1-2',
-          length: '20-30',
-        },
+      },
+      {
+        method: 'udp53',
+        port: 53,
       },
     ],
     successRate: 82,
+    keepAliveInterval: 20,
+    autoFallback: true,
   },
   {
-    domain: 'api.vivo.com.br',
-    description: 'Vivo API endpoint',
+    domain: 'telefonica.com.br',
+    description: 'Telefonica main domain',
     priority: 7,
     payloads: [
       {
-        method: 'websocket',
-        host: 'api.vivo.com.br',
-        path: '/api/v1',
+        method: 'http',
+      },
+      {
+        method: 'dnstt',
       },
     ],
     successRate: 75,
+    keepAliveInterval: 25,
+    autoFallback: true,
   },
 ];
 
@@ -144,56 +176,59 @@ const VIVO_SERVERS: ServerConfig[] = [
   {
     id: 'vivo-sp-01',
     name: 'São Paulo 01',
-    address: 'vivo-sp-01.example.com',
+    address: 'sp01.vivo.example.com',
     port: 443,
     protocol: 'vless',
     uuid: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
-    encryption: 'none',
     network: 'ws',
     tls: true,
     region: 'Southeast',
-    country: 'Brazil',
+    country: 'BR',
     flag: '🇧🇷',
     latency: 5,
     load: 45,
     bandwidth: '1Gbps',
     uptime: 99.9,
+    keepAliveEnabled: true,
+    captivePortalBypass: true,
   },
   {
     id: 'vivo-rj-01',
     name: 'Rio de Janeiro 01',
-    address: 'vivo-rj-01.example.com',
+    address: 'rj01.vivo.example.com',
     port: 443,
     protocol: 'vless',
     uuid: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
-    encryption: 'none',
     network: 'ws',
     tls: true,
     region: 'Southeast',
-    country: 'Brazil',
+    country: 'BR',
     flag: '🇧🇷',
-    latency: 12,
-    load: 32,
+    latency: 8,
+    load: 52,
     bandwidth: '1Gbps',
     uptime: 99.8,
+    keepAliveEnabled: true,
+    captivePortalBypass: true,
   },
   {
     id: 'vivo-mg-01',
     name: 'Minas Gerais 01',
-    address: 'vivo-mg-01.example.com',
+    address: 'mg01.vivo.example.com',
     port: 443,
-    protocol: 'vmess',
+    protocol: 'vless',
     uuid: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
-    encryption: 'auto',
-    network: 'tcp',
+    network: 'ws',
     tls: true,
     region: 'Southeast',
-    country: 'Brazil',
+    country: 'BR',
     flag: '🇧🇷',
-    latency: 18,
-    load: 28,
-    bandwidth: '500Mbps',
+    latency: 12,
+    load: 38,
+    bandwidth: '1Gbps',
     uptime: 99.7,
+    keepAliveEnabled: true,
+    captivePortalBypass: true,
   },
 ];
 
@@ -204,62 +239,64 @@ const VIVO_SERVERS: ServerConfig[] = [
 const CLARO_SNIS: SNIConfig[] = [
   {
     domain: 'claro.com.br',
-    description: 'Official Claro domain',
-    priority: 10,
+    description: 'Claro main domain',
+    priority: 9,
     payloads: [
       {
         method: 'http',
         host: 'claro.com.br',
+        path: '/',
       },
       {
         method: 'tls',
-        fragment: {
-          packets: '1-3',
-          length: '10-20',
-        },
+      },
+      {
+        method: 'dnstt',
+        dnsServer: 'dns.claro.com.br',
+      },
+      {
+        method: 'udp53',
+        port: 53,
       },
     ],
-    successRate: 92,
+    successRate: 90,
+    keepAliveInterval: 20,
+    autoFallback: true,
   },
   {
     domain: 'meuclaro.claro.com.br',
-    description: 'Claro app portal',
-    priority: 9,
-    payloads: [
-      {
-        method: 'websocket',
-        host: 'meuclaro.claro.com.br',
-        path: '/app',
-      },
-    ],
-    successRate: 88,
-  },
-  {
-    domain: 'api.claro.com.br',
-    description: 'Claro API',
+    description: 'Claro My Account',
     priority: 8,
     payloads: [
       {
+        method: 'http',
+      },
+      {
         method: 'tls',
-        fragment: {
-          packets: '2-4',
-          length: '15-25',
-        },
+      },
+      {
+        method: 'dnstt',
       },
     ],
     successRate: 85,
+    keepAliveInterval: 20,
+    autoFallback: true,
   },
   {
     domain: 'recarga.claro.com.br',
-    description: 'Claro recharge',
+    description: 'Claro recharge portal',
     priority: 7,
     payloads: [
       {
         method: 'http',
-        host: 'recarga.claro.com.br',
+      },
+      {
+        method: 'udp53',
       },
     ],
-    successRate: 80,
+    successRate: 78,
+    keepAliveInterval: 25,
+    autoFallback: true,
   },
 ];
 
@@ -267,55 +304,40 @@ const CLARO_SERVERS: ServerConfig[] = [
   {
     id: 'claro-sp-01',
     name: 'São Paulo 01',
-    address: 'claro-sp-01.example.com',
+    address: 'sp01.claro.example.com',
     port: 443,
     protocol: 'vless',
     uuid: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
-    encryption: 'none',
     network: 'ws',
     tls: true,
     region: 'Southeast',
-    country: 'Brazil',
+    country: 'BR',
     flag: '🇧🇷',
-    latency: 8,
-    load: 52,
+    latency: 6,
+    load: 48,
     bandwidth: '1Gbps',
     uptime: 99.8,
+    keepAliveEnabled: true,
+    captivePortalBypass: true,
   },
   {
     id: 'claro-ba-01',
     name: 'Bahia 01',
-    address: 'claro-ba-01.example.com',
+    address: 'ba01.claro.example.com',
     port: 443,
-    protocol: 'trojan',
-    password: 'password-here',
-    network: 'tcp',
-    tls: true,
-    region: 'Northeast',
-    country: 'Brazil',
-    flag: '🇧🇷',
-    latency: 22,
-    load: 38,
-    bandwidth: '500Mbps',
-    uptime: 99.6,
-  },
-  {
-    id: 'claro-rs-01',
-    name: 'Rio Grande do Sul 01',
-    address: 'claro-rs-01.example.com',
-    port: 443,
-    protocol: 'vmess',
+    protocol: 'vless',
     uuid: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
-    encryption: 'auto',
     network: 'ws',
     tls: true,
-    region: 'South',
-    country: 'Brazil',
+    region: 'Northeast',
+    country: 'BR',
     flag: '🇧🇷',
-    latency: 25,
-    load: 35,
-    bandwidth: '500Mbps',
-    uptime: 99.5,
+    latency: 15,
+    load: 42,
+    bandwidth: '1Gbps',
+    uptime: 99.6,
+    keepAliveEnabled: true,
+    captivePortalBypass: true,
   },
 ];
 
@@ -326,49 +348,41 @@ const CLARO_SERVERS: ServerConfig[] = [
 const OI_SNIS: SNIConfig[] = [
   {
     domain: 'oi.com.br',
-    description: 'Official Oi domain',
-    priority: 10,
-    payloads: [
-      {
-        method: 'http',
-        host: 'oi.com.br',
-      },
-      {
-        method: 'fragment',
-        fragment: {
-          packets: '1-3',
-          length: '10-20',
-        },
-      },
-    ],
-    successRate: 90,
-  },
-  {
-    domain: 'meuoi.oi.com.br',
-    description: 'Oi app portal',
-    priority: 9,
-    payloads: [
-      {
-        method: 'websocket',
-        host: 'meuoi.oi.com.br',
-      },
-    ],
-    successRate: 85,
-  },
-  {
-    domain: 'recarga.oi.com.br',
-    description: 'Oi recharge',
+    description: 'Oi main domain',
     priority: 8,
     payloads: [
       {
+        method: 'http',
+      },
+      {
         method: 'tls',
-        fragment: {
-          packets: '2-4',
-          length: '15-25',
-        },
+      },
+      {
+        method: 'dnstt',
+      },
+      {
+        method: 'udp53',
       },
     ],
     successRate: 82,
+    keepAliveInterval: 20,
+    autoFallback: true,
+  },
+  {
+    domain: 'meuoi.oi.com.br',
+    description: 'Oi My Account',
+    priority: 7,
+    payloads: [
+      {
+        method: 'http',
+      },
+      {
+        method: 'tls',
+      },
+    ],
+    successRate: 75,
+    keepAliveInterval: 25,
+    autoFallback: true,
   },
 ];
 
@@ -376,68 +390,66 @@ const OI_SERVERS: ServerConfig[] = [
   {
     id: 'oi-sp-01',
     name: 'São Paulo 01',
-    address: 'oi-sp-01.example.com',
+    address: 'sp01.oi.example.com',
     port: 443,
     protocol: 'vless',
     uuid: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
-    encryption: 'none',
     network: 'ws',
     tls: true,
     region: 'Southeast',
-    country: 'Brazil',
+    country: 'BR',
     flag: '🇧🇷',
-    latency: 15,
-    load: 42,
+    latency: 10,
+    load: 55,
     bandwidth: '500Mbps',
-    uptime: 99.4,
-  },
-  {
-    id: 'oi-rj-01',
-    name: 'Rio de Janeiro 01',
-    address: 'oi-rj-01.example.com',
-    port: 443,
-    protocol: 'trojan',
-    password: 'password-here',
-    network: 'tcp',
-    tls: true,
-    region: 'Southeast',
-    country: 'Brazil',
-    flag: '🇧🇷',
-    latency: 18,
-    load: 38,
-    bandwidth: '500Mbps',
-    uptime: 99.3,
+    uptime: 99.5,
+    keepAliveEnabled: true,
+    captivePortalBypass: true,
   },
 ];
 
 // ============================================================================
-// TIM - Fourth carrier
+// TIM - Fourth largest carrier
 // ============================================================================
 
 const TIM_SNIS: SNIConfig[] = [
   {
     domain: 'tim.com.br',
-    description: 'Official Tim domain',
-    priority: 10,
+    description: 'Tim main domain',
+    priority: 8,
     payloads: [
       {
         method: 'http',
-        host: 'tim.com.br',
+      },
+      {
+        method: 'tls',
+      },
+      {
+        method: 'dnstt',
+      },
+      {
+        method: 'udp53',
       },
     ],
-    successRate: 88,
+    successRate: 80,
+    keepAliveInterval: 20,
+    autoFallback: true,
   },
   {
     domain: 'meutim.tim.com.br',
-    description: 'Tim app',
-    priority: 9,
+    description: 'Tim My Account',
+    priority: 7,
     payloads: [
       {
-        method: 'websocket',
-        host: 'meutim.tim.com.br',
+        method: 'http',
+      },
+      {
+        method: 'tls',
       },
     ],
-    successRate: 84,
+    successRate: 73,
+    keepAliveInterval: 25,
+    autoFallback: true,
   },
 ];
 
@@ -445,25 +457,26 @@ const TIM_SERVERS: ServerConfig[] = [
   {
     id: 'tim-sp-01',
     name: 'São Paulo 01',
-    address: 'tim-sp-01.example.com',
+    address: 'sp01.tim.example.com',
     port: 443,
     protocol: 'vless',
     uuid: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
-    encryption: 'none',
     network: 'ws',
     tls: true,
     region: 'Southeast',
-    country: 'Brazil',
+    country: 'BR',
     flag: '🇧🇷',
-    latency: 10,
-    load: 48,
+    latency: 9,
+    load: 50,
     bandwidth: '500Mbps',
-    uptime: 99.2,
+    uptime: 99.4,
+    keepAliveEnabled: true,
+    captivePortalBypass: true,
   },
 ];
 
 // ============================================================================
-// Master Carriers Database
+// CARRIERS DATABASE
 // ============================================================================
 
 export const CARRIERS_DATABASE: CarrierConfig[] = [
@@ -471,23 +484,25 @@ export const CARRIERS_DATABASE: CarrierConfig[] = [
     id: 'vivo',
     name: 'Vivo',
     logo: '📱',
-    color: '#E70E0E',
+    color: '#E30613',
     snis: VIVO_SNIS,
     servers: VIVO_SERVERS,
-    description: 'Largest Brazilian carrier with excellent coverage',
-    coverage: 'National',
-    notes: 'Best zero-rating support, multiple SNI options',
+    description: 'Vivo - Maior operadora do Brasil',
+    coverage: 'Nacional',
+    notes: 'Melhor cobertura e estabilidade',
+    dnsServers: ['8.8.8.8', '1.1.1.1', 'dns.vivo.com.br'],
   },
   {
     id: 'claro',
     name: 'Claro',
     logo: '📡',
-    color: '#FF0000',
+    color: '#EC1C24',
     snis: CLARO_SNIS,
     servers: CLARO_SERVERS,
-    description: 'Second largest carrier with good infrastructure',
-    coverage: 'National',
-    notes: 'Stable connections, good latency',
+    description: 'Claro - Segunda maior operadora',
+    coverage: 'Nacional',
+    notes: 'Boa cobertura em áreas urbanas',
+    dnsServers: ['8.8.8.8', '1.1.1.1', 'dns.claro.com.br'],
   },
   {
     id: 'oi',
@@ -496,57 +511,60 @@ export const CARRIERS_DATABASE: CarrierConfig[] = [
     color: '#0066CC',
     snis: OI_SNIS,
     servers: OI_SERVERS,
-    description: 'Third largest carrier',
-    coverage: 'National',
-    notes: 'Moderate performance, regional variations',
+    description: 'Oi - Terceira maior operadora',
+    coverage: 'Nacional',
+    notes: 'Cobertura em áreas rurais',
+    dnsServers: ['8.8.8.8', '1.1.1.1'],
   },
   {
     id: 'tim',
     name: 'Tim',
-    logo: '⚪',
-    color: '#FF6600',
+    logo: '🟣',
+    color: '#6B2D5C',
     snis: TIM_SNIS,
     servers: TIM_SERVERS,
-    description: 'Fourth carrier',
-    coverage: 'National',
-    notes: 'Good coverage in urban areas',
+    description: 'Tim - Quarta maior operadora',
+    coverage: 'Nacional',
+    notes: 'Cobertura em regiões metropolitanas',
+    dnsServers: ['8.8.8.8', '1.1.1.1'],
   },
 ];
 
 // ============================================================================
-// Helper Functions
+// HELPER FUNCTIONS
 // ============================================================================
 
-export function getCarrierById(carrierId: string): CarrierConfig | undefined {
-  return CARRIERS_DATABASE.find((c) => c.id === carrierId);
-}
-
-export function getServerById(carrierId: string, serverId: string): ServerConfig | undefined {
-  const carrier = getCarrierById(carrierId);
-  return carrier?.servers.find((s) => s.id === serverId);
-}
-
-export function getSNIById(carrierId: string, sniIndex: number): SNIConfig | undefined {
-  const carrier = getCarrierById(carrierId);
-  return carrier?.snis[sniIndex];
-}
-
-export function getTopSNIs(carrierId: string, limit: number = 3): SNIConfig[] {
-  const carrier = getCarrierById(carrierId);
+export function getTopSNIs(carrierId: string, limit: number = 5): SNIConfig[] {
+  const carrier = CARRIERS_DATABASE.find((c) => c.id === carrierId);
   if (!carrier) return [];
-  return carrier.snis.sort((a, b) => b.priority - a.priority).slice(0, limit);
+
+  return carrier.snis
+    .sort((a, b) => (b.priority || 0) - (a.priority || 0))
+    .slice(0, limit);
 }
 
-export function getServersByRegion(carrierId: string, region: string): ServerConfig[] {
-  const carrier = getCarrierById(carrierId);
+export function getSNIsByMethod(carrierId: string, method: PayloadMethod): SNIConfig[] {
+  const carrier = CARRIERS_DATABASE.find((c) => c.id === carrierId);
   if (!carrier) return [];
-  return carrier.servers.filter((s) => s.region === region);
+
+  return carrier.snis.filter((sni) =>
+    sni.payloads.some((p) => p.method === method)
+  );
 }
 
-export function getAllServers(): ServerConfig[] {
-  return CARRIERS_DATABASE.flatMap((c) => c.servers);
+export function getCarrierDNSServers(carrierId: string): string[] {
+  const carrier = CARRIERS_DATABASE.find((c) => c.id === carrierId);
+  return carrier?.dnsServers || ['8.8.8.8', '1.1.1.1'];
 }
 
-export function getAllSNIs(): SNIConfig[] {
-  return CARRIERS_DATABASE.flatMap((c) => c.snis);
+export function getRecommendedSNI(carrierId: string): SNIConfig | undefined {
+  const snis = getTopSNIs(carrierId, 1);
+  return snis[0];
+}
+
+export function getSNIWithAutoFallback(carrierId: string): SNIConfig[] {
+  const carrier = CARRIERS_DATABASE.find((c) => c.id === carrierId);
+  if (!carrier) return [];
+
+  return carrier.snis.filter((sni) => sni.autoFallback === true);
 }

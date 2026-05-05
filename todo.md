@@ -45,3 +45,42 @@
 - [x] Atualizar VpnBridge com real-time log capture
 - [x] Adicionar modo Pro/Stealth na UI
 - [x] Criar DPI_BYPASS_GUIDE.md completo
+
+
+## Reliability & Stability Optimization (v2.1)
+
+### Phase 1: DNSTT & UDP Port 53
+- [ ] Adicionar protocolo DNSTT ao seletor de protocolos
+- [ ] Implementar suporte a UDP porta 53 no Xray config generator
+- [ ] Criar UI para seleção de DNS tunneling
+- [ ] Documentar DNSTT vs VLESS/VMESS
+
+### Phase 2: Captive Portal Bypass
+- [ ] Implementar resposta fake para connectivitycheck.gstatic.com
+- [ ] Criar CaptivePortalBypass.java
+- [ ] Integrar no MyVpnService.java
+- [ ] Testar com diferentes versões do Android
+
+### Phase 3: SNI Scanning Dinâmico
+- [ ] Criar SNIScannerService.java
+- [ ] Implementar auto-fallback para próximo SNI
+- [ ] Adicionar retry logic com exponential backoff
+- [ ] Criar UI para visualizar SNI scanning progress
+
+### Phase 4: Keep-Alive Persistente
+- [ ] Configurar persistentKeepalive: 15-25s no Xray
+- [ ] Implementar heartbeat no VpnBridge
+- [ ] Adicionar keep-alive para conexões sem saldo
+- [ ] Testar em redes com timeout agressivo
+
+### Phase 5: Roteamento Global & WakeLock
+- [ ] Implementar roteamento 0.0.0.0/0 (global)
+- [ ] Adicionar PowerManager.WakeLock
+- [ ] Criar dialog para "Ignorar Otimizações de Bateria"
+- [ ] Implementar foreground service com notification
+
+### Phase 6: Documentação & Testes
+- [ ] Criar RELIABILITY_GUIDE.md
+- [ ] Documentar cada otimização
+- [ ] Criar guia de troubleshooting
+- [ ] Adicionar testes de conectividade
