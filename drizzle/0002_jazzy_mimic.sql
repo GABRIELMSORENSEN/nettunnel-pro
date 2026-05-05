@@ -1,0 +1,1 @@
+ALTER TABLE `vpn_configurations` ADD `metadata` json;

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { CARRIERS_DATABASE, getTopSNIs } from '@/lib/carriers-database';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Zap, Shield } from 'lucide-react';
 
 interface CarrierSelectorProps {
   selectedCarrier: string;
@@ -12,16 +12,24 @@ interface CarrierSelectorProps {
   onSNIChange: (sniDomain: string) => void;
   onPayloadChange: (payload: string) => void;
   disabled?: boolean;
+  mode?: 'lite' | 'standard' | 'pro';
+  onModeChange?: (mode: 'lite' | 'standard' | 'pro') => void;
 }
 
 /**
- * Advanced Carrier Selector Component
+ * Advanced Carrier Selector Component with Pro/Stealth Mode
  * 
- * Allows users to select:
- * - Carrier (Vivo, Claro, Oi, Tim)
- * - Server (by region and latency)
- * - SNI (zero-rating domain)
- * - Payload method (HTTP, TLS, WebSocket, Fragment)
+ * Features:
+ * - Carrier selection (Vivo, Claro, Oi, Tim)
+ * - Server selection (by region and latency)
+ * - SNI selection (zero-rating domain)
+ * - Payload method selection (HTTP, TLS, WebSocket, Fragment)
+ * - Pro/Stealth mode toggle (DPI bypass, TLS fingerprint, multiplexing)
+ * 
+ * Modes:
+ * - Lite: Minimal overhead, no DPI bypass
+ * - Standard: Balanced performance and DPI bypass
+ * - Pro: Maximum DPI bypass with packet fragmentation and TLS spoofing
  */
 export function CarrierSelector({
   selectedCarrier,
@@ -33,6 +41,8 @@ export function CarrierSelector({
   onSNIChange,
   onPayloadChange,
   disabled = false,
+  mode = 'standard',
+  onModeChange,
 }: CarrierSelectorProps) {
   const [expandedSection, setExpandedSection] = useState<string | null>('carrier');
 
@@ -42,8 +52,70 @@ export function CarrierSelector({
   const currentSNI = currentSNIs.find((s) => s.domain === selectedSNI);
   const currentPayloads = currentSNI?.payloads || [];
 
+  const getModeDescription = (m: string) => {
+    switch (m) {
+      case 'lite':
+        return 'Sem fragmentação • Menor overhead';
+      case 'pro':
+        return 'Máximo bypass DPI • Fragmentação avançada';
+      default:
+        return 'Balanceado • Fragmentação moderada';
+    }
+  };
+
+  const getModeColor = (m: string) => {
+    switch (m) {
+      case 'lite':
+        return 'from-blue-500/20 to-blue-600/20 border-blue-500/60';
+      case 'pro':
+        return 'from-red-500/20 to-purple-600/20 border-red-500/60';
+      default:
+        return 'from-cyan-500/20 to-purple-500/20 border-cyan-500/60';
+    }
+  };
+
   return (
     <div className="space-y-3 bg-slate-900/50 border border-slate-700/50 rounded-sm p-4">
+      {/* MODE SELECTOR - Pro/Stealth Toggle */}
+      <div className="space-y-2">
+        <p className="text-xs font-mono text-slate-400 uppercase tracking-widest">Modo de Operação</p>
+        <div className="grid grid-cols-3 gap-2">
+          {(['lite', 'standard', 'pro'] as const).map((m) => (
+            <button
+              key={m}
+              onClick={() => onModeChange?.(m)}
+              disabled={disabled}
+              className={`p-3 rounded-sm border transition-all ${
+                mode === m
+                  ? `bg-gradient-to-r ${getModeColor(m)}`
+                  : 'bg-slate-800/60 border-slate-700/50 hover:border-slate-600'
+              } disabled:opacity-50`}
+            >
+              <div className="flex items-center justify-center gap-1 mb-1">
+                {m === 'pro' ? (
+                  <Shield size={14} className="text-red-400" />
+                ) : (
+                  <Zap size={14} className="text-cyan-400" />
+                )}
+                <span className="text-xs font-bold uppercase text-slate-100">
+                  {m === 'lite' ? 'Lite' : m === 'pro' ? 'Pro/Stealth' : 'Standard'}
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 font-mono">{getModeDescription(m)}</p>
+            </button>
+          ))}
+        </div>
+
+        {/* Mode Info */}
+        {mode === 'pro' && (
+          <div className="p-2 bg-red-500/10 border border-red-500/30 rounded-sm">
+            <p className="text-xs text-red-400 font-mono">
+              🛡️ Modo Pro/Stealth Ativo: Fragmentação de pacotes, TLS fingerprint Chrome, Multiplexing 8x
+            </p>
+          </div>
+        )}
+      </div>
+
       {/* CARRIER SELECTOR */}
       <div className="space-y-2">
         <button
@@ -245,6 +317,9 @@ export function CarrierSelector({
               </p>
               <p>
                 <span className="text-cyan-400">Payload:</span> {selectedPayload}
+              </p>
+              <p>
+                <span className="text-cyan-400">Modo:</span> {mode === 'pro' ? '🛡️ Pro/Stealth' : mode === 'lite' ? 'Lite' : 'Standard'}
               </p>
               <p>
                 <span className="text-cyan-400">Latência:</span> {currentServer?.latency}ms

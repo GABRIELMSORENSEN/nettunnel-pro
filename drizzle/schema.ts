@@ -48,6 +48,7 @@ export const vpnConfigurations = mysqlTable("vpn_configurations", {
   payloadMethod: varchar("payloadMethod", { length: 50 }).notNull(), // http, tls, websocket, fragment
   protocol: varchar("protocol", { length: 50 }).notNull(), // vless, vmess, trojan
   isDefault: int("isDefault").default(0).notNull(),
+  metadata: json("metadata"), // Pro/Stealth mode settings: {mode, enableDPIBypass, tlsFingerprint, muxConcurrency}
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

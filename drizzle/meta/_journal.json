@@ -15,6 +15,13 @@
       "when": 1777985706866,
       "tag": "0001_furry_vulture",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1777988096296,
+      "tag": "0002_jazzy_mimic",
+      "breakpoints": true
     }
   ]
 }
