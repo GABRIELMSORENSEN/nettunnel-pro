@@ -1,219 +1,241 @@
-import React, { useState } from 'react';
-import { useVpn, VpnConfig } from '@/contexts/VpnContext';
+import { useVpn } from '@/contexts/VpnContext';
+import { CarrierSelector } from '@/components/CarrierSelector';
+import { TestRunner } from '@/components/TestRunner';
 import { ConnectionNode } from '@/components/ConnectionNode';
-import { ServerList } from '@/components/ServerList';
-import { StatusPanel } from '@/components/StatusPanel';
-import { ConnectionLogs } from '@/components/ConnectionLogs';
 import { Button } from '@/components/ui/button';
-import { Settings } from 'lucide-react';
+import { Trash2, Copy } from 'lucide-react';
 
 /**
- * NetTunnel Pro VPN - Home Page
+ * NetTunnel Pro - Advanced VPN Configuration Interface
  * 
- * Design: Cyberpunk Minimalism
- * - Deep charcoal background with neon cyan/purple accents
- * - Asymmetric layout: status panel left, connection controls center-right
- * - Animated connection nodes with glow effects
- * - Terminal-style logs with scanline overlay
+ * Features:
+ * - Multiple carrier support (Vivo, Claro, Oi, Tim)
+ * - Advanced SNI and payload configuration
+ * - Connection testing and validation
+ * - Real-time logs and diagnostics
  */
 export default function Home() {
-  const { 
-    isConnected, 
-    isConnecting, 
-    connect, 
-    disconnect, 
-    selectedServer 
+  const {
+    isConnected,
+    isConnecting,
+    selectedCarrier,
+    selectedServer,
+    selectedSNI,
+    selectedPayload,
+    logs,
+    currentIp,
+    latency,
+    bandwidth,
+    connect,
+    disconnect,
+    selectCarrier,
+    selectServer,
+    selectSNI,
+    selectPayload,
+    clearLogs,
   } = useVpn();
-  
-  const [showSettings, setShowSettings] = useState(false);
 
-  const handleToggleConnection = async () => {
-    if (isConnected) {
-      await disconnect();
-    } else {
-      // Create Xray configuration for selected server
-      const config: VpnConfig = {
-        protocol: 'vless',
-        serverAddress: 'br-sp-01.nettunnel.pro',
-        serverPort: 443,
-        uuid: 'a3c14198-dc1f-40a3-9d4a-8c37609f59f2',
-        encryption: 'none',
-        network: 'ws',
-        tlsServerName: 'portalrecarga.vivo.com.br',
-        host: 'br-sp-01.nettunnel.pro'
-      };
-      
-      await connect(config);
-    }
+  const handleConnect = async () => {
+    // Create config from selected settings
+    const config = {
+      protocol: 'vless' as const,
+      serverAddress: 'server.example.com',
+      serverPort: 443,
+      uuid: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+      encryption: 'none',
+      network: 'ws' as const,
+      tlsServerName: selectedSNI,
+      host: selectedSNI,
+    };
+    
+    await connect(config);
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-hidden">
-      {/* Diagonal divider background */}
-      <div className="fixed inset-0 pointer-events-none">
-        <svg className="absolute top-0 right-0 w-96 h-96 opacity-5" viewBox="0 0 400 400">
-          <defs>
-            <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#00D9FF" />
-              <stop offset="100%" stopColor="#9D00FF" />
-            </linearGradient>
-          </defs>
-          <polygon points="0,0 400,0 400,400 0,400" fill="url(#grad1)" />
-        </svg>
-      </div>
-
-      {/* Header */}
-      <header className="relative z-10 border-b border-slate-700/50 bg-slate-950/80 backdrop-blur-sm">
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
+      {/* HEADER */}
+      <header className="border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-sm bg-gradient-to-br from-cyan-400 to-purple-500 flex items-center justify-center glow-cyan">
-              <span className="text-sm font-mono font-bold text-black">NT</span>
-            </div>
-            <div>
-              <h1 className="text-lg font-mono font-bold text-slate-100">
-                NetTunnel Pro
-              </h1>
-              <p className="text-xs text-slate-400 font-mono">
-                VPN com Bypass DPI
-              </p>
-            </div>
+          <div>
+            <h1 className="text-2xl font-bold text-transparent bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text">
+              NetTunnel Pro
+            </h1>
+            <p className="text-xs text-slate-400 font-mono mt-1">VPN com Bypass DPI • Zero-Rating</p>
           </div>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowSettings(!showSettings)}
-            className="text-slate-400 hover:text-cyan-400"
-          >
-            <Settings className="w-5 h-5" />
-          </Button>
+          <div className="text-right">
+            <p className="text-xs text-slate-400 font-mono">v1.0.0</p>
+            <p className="text-xs text-slate-500 mt-1">Powered by Xray-core</p>
+          </div>
         </div>
       </header>
 
-      {/* Main content */}
-      <main className="relative z-10 container py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left panel - Status and Servers */}
-          <div className="lg:col-span-1 space-y-6">
-            <StatusPanel />
-            <div className="border-t border-slate-700/50 pt-6">
-              <ServerList />
-            </div>
-          </div>
-
-          {/* Center - Connection Node and Control */}
-          <div className="lg:col-span-1 flex flex-col items-center justify-center gap-8">
-            <ConnectionNode 
+      <main className="container py-8 space-y-6">
+        {/* STATUS SECTION */}
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* CONNECTION NODE */}
+          <div className="lg:col-span-1 flex justify-center items-center">
+            <ConnectionNode
               isActive={isConnected}
               isConnecting={isConnecting}
-              label={isConnected ? 'CONECTADO' : isConnecting ? 'CONECTANDO' : 'DESCONECTADO'}
+              label={isConnected ? 'CONECTADO' : 'DESCONECTADO'}
             />
-
-            <Button
-              onClick={handleToggleConnection}
-              disabled={isConnecting}
-              className={`w-full max-w-xs h-12 font-mono font-bold uppercase tracking-wider transition-all duration-300 ${
-                isConnected
-                  ? 'bg-red-600 hover:bg-red-700 text-white'
-                  : 'bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-black'
-              } ${isConnecting ? 'opacity-75' : ''}`}
-            >
-              {isConnecting 
-                ? 'Conectando...' 
-                : isConnected 
-                ? 'Desconectar' 
-                : 'Conectar'}
-            </Button>
-
-            {/* Diagonal divider */}
-            <div className="w-full h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent" />
           </div>
 
-          {/* Right panel - Logs */}
-          <div className="lg:col-span-1 flex flex-col h-96">
-            <ConnectionLogs />
-          </div>
-        </div>
+          {/* STATUS PANEL */}
+          <div className="lg:col-span-2 space-y-3">
+            <div className="grid grid-cols-3 gap-2">
+              <div className="p-3 bg-slate-800/60 border border-slate-700/50 rounded-sm">
+                <p className="text-xs font-mono text-slate-400 uppercase">Status</p>
+                <p className={`text-sm font-bold mt-1 ${isConnected ? 'text-green-400' : 'text-slate-400'}`}>
+                  {isConnected ? '● ATIVO' : '● INATIVO'}
+                </p>
+              </div>
 
-        {/* Settings panel */}
-        {showSettings && (
-          <div className="mt-8 p-6 bg-slate-900/50 border border-slate-700/50 rounded-sm animate-diagonal-slide">
-            <h2 className="text-lg font-mono font-bold text-slate-100 mb-4">
-              Configurações
+              <div className="p-3 bg-slate-800/60 border border-slate-700/50 rounded-sm">
+                <p className="text-xs font-mono text-slate-400 uppercase">IP Externo</p>
+                <p className="text-sm font-mono text-cyan-400 mt-1 truncate">
+                  {currentIp || 'N/A'}
+                </p>
+              </div>
+
+              <div className="p-3 bg-slate-800/60 border border-slate-700/50 rounded-sm">
+                <p className="text-xs font-mono text-slate-400 uppercase">Latência</p>
+                <p className={`text-sm font-bold mt-1 ${latency && latency < 50 ? 'text-green-400' : 'text-yellow-400'}`}>
+                  {latency ? `${latency}ms` : 'N/A'}
+                </p>
+              </div>
+            </div>
+
+            {bandwidth && (
+              <div className="p-3 bg-slate-800/60 border border-slate-700/50 rounded-sm">
+                <p className="text-xs font-mono text-slate-400 uppercase">Velocidade</p>
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-cyan-400 to-purple-500"
+                      style={{ width: `${Math.min(bandwidth, 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-sm font-bold text-cyan-400">{bandwidth}Mbps</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* CONFIGURATION SECTION */}
+        <section className="space-y-4">
+          <div>
+            <h2 className="text-lg font-mono font-semibold text-slate-300 uppercase tracking-widest mb-3">
+              Configuração de Conexão
             </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-2">
-                  Protocolo
-                </label>
-                <select className="w-full bg-slate-800 border border-slate-700 rounded-sm px-3 py-2 text-sm text-slate-100 font-mono">
-                  <option>VLESS</option>
-                  <option>VMESS</option>
-                  <option>TROJAN</option>
-                </select>
-              </div>
+            <CarrierSelector
+              selectedCarrier={selectedCarrier}
+              selectedServer={selectedServer}
+              selectedSNI={selectedSNI}
+              selectedPayload={selectedPayload}
+              onCarrierChange={selectCarrier}
+              onServerChange={selectServer}
+              onSNIChange={selectSNI}
+              onPayloadChange={selectPayload}
+              disabled={isConnected || isConnecting}
+            />
+          </div>
 
-              <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-2">
-                  Rede
-                </label>
-                <select className="w-full bg-slate-800 border border-slate-700 rounded-sm px-3 py-2 text-sm text-slate-100 font-mono">
-                  <option>WebSocket (WS)</option>
-                  <option>TCP</option>
-                </select>
-              </div>
+          {/* CONNECT BUTTON */}
+          <div className="flex gap-3">
+            {!isConnected ? (
+              <Button
+                onClick={handleConnect}
+                disabled={isConnecting}
+                className="flex-1 h-12 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 disabled:opacity-50 text-white font-bold text-lg rounded-sm transition-all"
+              >
+                {isConnecting ? 'CONECTANDO...' : 'CONECTAR'}
+              </Button>
+            ) : (
+              <Button
+                onClick={disconnect}
+                disabled={isConnecting}
+                className="flex-1 h-12 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-bold text-lg rounded-sm transition-all"
+              >
+                {isConnecting ? 'DESCONECTANDO...' : 'DESCONECTAR'}
+              </Button>
+            )}
+          </div>
+        </section>
 
-              <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-2">
-                  TLS SNI
-                </label>
-                <input 
-                  type="text" 
-                  placeholder="portalrecarga.vivo.com.br"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-sm px-3 py-2 text-sm text-slate-100 font-mono placeholder-slate-600"
-                />
-              </div>
+        {/* TEST SECTION */}
+        <section className="space-y-4">
+          <h2 className="text-lg font-mono font-semibold text-slate-300 uppercase tracking-widest">
+            Validação de Configurações
+          </h2>
+          <TestRunner carrierId={selectedCarrier} disabled={isConnected || isConnecting} />
+        </section>
 
-              <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-2">
-                  Fragment (DPI Bypass)
-                </label>
-                <select className="w-full bg-slate-800 border border-slate-700 rounded-sm px-3 py-2 text-sm text-slate-100 font-mono">
-                  <option>1-3 packets</option>
-                  <option>2-4 packets</option>
-                  <option>3-5 packets</option>
-                </select>
-              </div>
+        {/* LOGS SECTION */}
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-mono font-semibold text-slate-300 uppercase tracking-widest">
+              Logs de Conexão
+            </h2>
+            <button
+              onClick={clearLogs}
+              className="flex items-center gap-1 px-3 py-1 text-xs font-mono text-slate-400 hover:text-slate-300 bg-slate-800/60 border border-slate-700/50 rounded-sm hover:border-slate-600 transition-colors"
+            >
+              <Trash2 size={14} />
+              Limpar
+            </button>
+          </div>
+
+          <div className="max-h-64 overflow-y-auto bg-slate-950 border border-slate-700/50 rounded-sm p-4 space-y-2 font-mono text-xs">
+            {logs.length === 0 ? (
+              <p className="text-slate-500">Aguardando eventos...</p>
+            ) : (
+              logs.map((log, index) => (
+                <div key={index} className={`flex items-start gap-2 ${
+                  log.level === 'success' ? 'text-green-400' :
+                  log.level === 'error' ? 'text-red-400' :
+                  log.level === 'warning' ? 'text-yellow-400' :
+                  'text-cyan-400'
+                }`}>
+                  <span className="text-slate-600 flex-shrink-0">
+                    [{log.timestamp.toLocaleTimeString()}]
+                  </span>
+                  <span className="flex-shrink-0">
+                    {log.level === 'success' ? '✓' :
+                     log.level === 'error' ? '✗' :
+                     log.level === 'warning' ? '⚠' :
+                     '→'}
+                  </span>
+                  <span className="flex-1">{log.message}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
+
+        {/* FOOTER */}
+        <footer className="border-t border-slate-700/50 pt-6 mt-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-slate-400 font-mono">
+            <div>
+              <p className="text-slate-500 uppercase mb-1">Operadoras</p>
+              <p>Vivo, Claro, Oi, Tim</p>
             </div>
-
-            <div className="mt-6 flex gap-3">
-              <Button 
-                onClick={() => setShowSettings(false)}
-                className="bg-cyan-600 hover:bg-cyan-700 text-black font-mono font-bold"
-              >
-                Salvar
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={() => setShowSettings(false)}
-                className="border-slate-700 text-slate-300 hover:text-slate-100"
-              >
-                Cancelar
-              </Button>
+            <div>
+              <p className="text-slate-500 uppercase mb-1">Protocolos</p>
+              <p>VLESS, VMESS, Trojan</p>
+            </div>
+            <div>
+              <p className="text-slate-500 uppercase mb-1">Métodos</p>
+              <p>HTTP, TLS, WS, Fragment</p>
+            </div>
+            <div>
+              <p className="text-slate-500 uppercase mb-1">Versão</p>
+              <p>1.0.0 • MIT License</p>
             </div>
           </div>
-        )}
+        </footer>
       </main>
-
-      {/* Footer */}
-      <footer className="relative z-10 border-t border-slate-700/50 bg-slate-950/80 backdrop-blur-sm mt-12">
-        <div className="container py-4 text-center">
-          <p className="text-xs text-slate-500 font-mono">
-            NetTunnel Pro v1.0.0 • Powered by Xray-core • Capacitor + React
-          </p>
-        </div>
-      </footer>
     </div>
   );
 }
