@@ -1,0 +1,28 @@
+NetTunnel Pro v1.0.0 - Initial Release
+
+✨ New Features:
+- Advanced VPN with DPI bypass
+- Multiple carrier support (Vivo, Claro, Oi, Tim)
+- Pro/Stealth mode for maximum obfuscation
+- Real-time connection logs
+- SNI scanning and auto-fix
+
+🔐 Security:
+- TLS fingerprint spoofing (Chrome/Firefox/Safari/Edge)
+- Packet fragmentation for DPI evasion
+- Multiplexing for faster speeds
+- DNSTT protocol support
+- Captive portal bypass
+
+🚀 Performance:
+- Optimized for 4G/5G networks
+- Keep-alive to prevent disconnections
+- Battery optimization with WakeLock
+- Global app routing
+
+🐛 Bug Fixes:
+- Fixed DNS hijacking issues
+- Improved connection stability
+- Resolved MTU optimization problems
+
+Thank you for using NetTunnel Pro!
