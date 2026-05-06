@@ -9,6 +9,8 @@ export interface VpnConfig {
   network: 'ws' | 'tcp';
   tlsServerName: string;
   host: string;
+  wsPath?: string;
+  xrayConfig?: Record<string, unknown>;
 }
 
 export interface VpnLog {

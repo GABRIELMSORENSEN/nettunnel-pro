@@ -7,6 +7,17 @@ import { ConnectionLogs } from '@/components/ConnectionLogs';
 import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
 
+const WORKER_ADDRESS = 'g4t0xx-tunnel.gatoxxplayers.workers.dev';
+const WORKER_UUID = '8673c180-2a94-4f2a-bb92-91b49af109aa';
+const WS_PATH = '/?ed=2048';
+
+const PAYLOADS = [
+  { id: 'vivo', label: 'Vivo SNI', sni: 'portalrecarga.vivo.com.br' },
+  { id: 'tim', label: 'Tim SNI', sni: 'm.tim.com.br' },
+  { id: 'claro', label: 'Claro SNI', sni: 'claro.com.br' },
+  { id: 'cf', label: 'Cloudflare Bypass', sni: WORKER_ADDRESS },
+] as const;
+
 /**
  * NetTunnel Pro VPN - Home Page
  * 
@@ -26,21 +37,59 @@ export default function Home() {
   } = useVpn();
   
   const [showSettings, setShowSettings] = useState(false);
+  const [selectedPayloadId, setSelectedPayloadId] = useState<(typeof PAYLOADS)[number]['id']>('vivo');
 
   const handleToggleConnection = async () => {
     if (isConnected) {
       await disconnect();
     } else {
-      // Create Xray configuration for selected server
+      const selectedPayload = PAYLOADS.find(payload => payload.id === selectedPayloadId) ?? PAYLOADS[0];
+
+      const xrayConfig = {
+        outbounds: [
+          {
+            protocol: 'vless',
+            settings: {
+              vnext: [
+                {
+                  address: WORKER_ADDRESS,
+                  port: 443,
+                  users: [{ id: WORKER_UUID, encryption: 'none' }],
+                },
+              ],
+            },
+            streamSettings: {
+              network: 'ws',
+              security: 'tls',
+              tlsSettings: {
+                serverName: selectedPayload.sni,
+                allowInsecure: false,
+              },
+              wsSettings: {
+                path: WS_PATH,
+                headers: {
+                  Host: selectedPayload.sni,
+                },
+              },
+              sockopt: {
+                fragment: { packets: '1-3', length: '10-20', interval: '1-5' },
+              },
+            },
+          },
+        ],
+      };
+
       const config: VpnConfig = {
         protocol: 'vless',
-        serverAddress: 'br-sp-01.nettunnel.pro',
+        serverAddress: WORKER_ADDRESS,
         serverPort: 443,
-        uuid: 'a3c14198-dc1f-40a3-9d4a-8c37609f59f2',
+        uuid: WORKER_UUID,
         encryption: 'none',
         network: 'ws',
-        tlsServerName: 'portalrecarga.vivo.com.br',
-        host: 'br-sp-01.nettunnel.pro'
+        tlsServerName: selectedPayload.sni,
+        host: selectedPayload.sni,
+        wsPath: WS_PATH,
+        xrayConfig,
       };
       
       await connect(config);
@@ -143,6 +192,21 @@ export default function Home() {
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-xs font-mono text-slate-400 uppercase mb-2">
+                  Payload SNI
+                </label>
+                <select
+                  value={selectedPayloadId}
+                  onChange={(event) => setSelectedPayloadId(event.target.value as (typeof PAYLOADS)[number]['id'])}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-sm px-3 py-2 text-sm text-slate-100 font-mono"
+                >
+                  {PAYLOADS.map(payload => (
+                    <option key={payload.id} value={payload.id}>{payload.label}</option>
+                  ))}
+                </select>
+              </div>
+
               <div>
                 <label className="block text-xs font-mono text-slate-400 uppercase mb-2">
                   Protocolo
