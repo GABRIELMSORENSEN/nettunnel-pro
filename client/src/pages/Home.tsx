@@ -11,12 +11,22 @@ const WORKER_ADDRESS = 'g4t0xx-tunnel.gatoxxplayers.workers.dev';
 const WORKER_UUID = '8673c180-2a94-4f2a-bb92-91b49af109aa';
 const WS_PATH = '/?ed=2048';
 
-const PAYLOADS = [
-  { id: 'vivo', label: 'Vivo SNI', sni: 'portalrecarga.vivo.com.br' },
-  { id: 'tim', label: 'Tim SNI', sni: 'm.tim.com.br' },
-  { id: 'claro', label: 'Claro SNI', sni: 'claro.com.br' },
-  { id: 'cf', label: 'Cloudflare Bypass', sni: WORKER_ADDRESS },
-] as const;
+type PayloadMethod = 'VLESS';
+
+interface Payload {
+  id: string;
+  name: string;
+  carrier: string;
+  sni: string;
+  method: PayloadMethod;
+}
+
+const PAYLOADS: Payload[] = [
+  { id: 'vivo-1', name: 'Vivo Zero-Rating', carrier: 'Vivo', sni: 'portalrecarga.vivo.com.br', method: 'VLESS' },
+  { id: 'tim-1', name: 'Tim Social Free', carrier: 'Tim', sni: 'm.tim.com.br', method: 'VLESS' },
+  { id: 'claro-1', name: 'Claro Unlimited', carrier: 'Claro', sni: 'claro.com.br', method: 'VLESS' },
+  { id: 'generic-1', name: 'Cloudflare Bypass', carrier: 'Universal', sni: WORKER_ADDRESS, method: 'VLESS' },
+];
 
 /**
  * NetTunnel Pro VPN - Home Page
@@ -28,16 +38,15 @@ const PAYLOADS = [
  * - Terminal-style logs with scanline overlay
  */
 export default function Home() {
-  const { 
-    isConnected, 
-    isConnecting, 
-    connect, 
-    disconnect, 
-    selectedServer 
+  const {
+    isConnected,
+    isConnecting,
+    connect,
+    disconnect,
   } = useVpn();
   
   const [showSettings, setShowSettings] = useState(false);
-  const [selectedPayloadId, setSelectedPayloadId] = useState<(typeof PAYLOADS)[number]['id']>('vivo');
+  const [selectedPayloadId, setSelectedPayloadId] = useState<string>('vivo-1');
 
   const handleToggleConnection = async () => {
     if (isConnected) {
@@ -198,11 +207,11 @@ export default function Home() {
                 </label>
                 <select
                   value={selectedPayloadId}
-                  onChange={(event) => setSelectedPayloadId(event.target.value as (typeof PAYLOADS)[number]['id'])}
+                  onChange={(event) => setSelectedPayloadId(event.target.value)}
                   className="w-full bg-slate-800 border border-slate-700 rounded-sm px-3 py-2 text-sm text-slate-100 font-mono"
                 >
                   {PAYLOADS.map(payload => (
-                    <option key={payload.id} value={payload.id}>{payload.label}</option>
+                    <option key={payload.id} value={payload.id}>{payload.name} ({payload.carrier})</option>
                   ))}
                 </select>
               </div>
