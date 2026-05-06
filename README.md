@@ -267,6 +267,7 @@ adb shell ping 8.8.8.8
 ## 📚 Documentação
 
 - **[BUILD_GUIDE.md](./BUILD_GUIDE.md)** - Guia completo de build e deployment
+- **[docs/ANDROID_BUILD.md](./docs/ANDROID_BUILD.md)** - Passo a passo direto para gerar APK Android com Capacitor e Xray
 - **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Arquitetura técnica detalhada
 - **[ideas.md](./ideas.md)** - Conceitos de design explorados
 
