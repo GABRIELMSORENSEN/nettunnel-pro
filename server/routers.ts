@@ -4,6 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { vpnRouter } from "./vpn-router";
 import { vpnRouterExtended } from "./vpn-router-extended";
+import { notificationsRouter } from "./notifications-router";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -20,6 +21,7 @@ export const appRouter = router({
   }),
   vpn: vpnRouter,
   vpnExtended: vpnRouterExtended,
+  notifications: notificationsRouter,
 });
 
 export type AppRouter = typeof appRouter;
