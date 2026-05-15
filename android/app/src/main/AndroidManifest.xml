@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- ============================================
+         PERMISSÕES DE REDE E VPN
+         ============================================ -->
+    
+    <!-- Permissão para criar e gerenciar VPN -->
+    <uses-permission android:name="android.permission.BIND_VPN_SERVICE" />
+    
+    <!-- Permissões de rede -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    
+    <!-- Permissão para acessar informações de conectividade -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    
+    <!-- ============================================
+         PERMISSÕES DE SISTEMA
+         ============================================ -->
+    
+    <!-- Permissão para manter a tela ligada -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    
+    <!-- Permissão para acessar informações do dispositivo -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    
+    <!-- Permissão para ler/escrever em armazenamento externo -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    
+    <!-- ============================================
+         PERMISSÕES DE SEGURANÇA
+         ============================================ -->
+    
+    <!-- Permissão para verificar assinatura do app -->
+    <uses-permission android:name="android.permission.GET_PACKAGE_SIZE" />
+    
+    <!-- Permissão para acessar informações de pacotes instalados -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    
+    <!-- ============================================
+         PERMISSÕES DO GOOGLE ADMOB
+         ============================================ -->
+    
+    <!-- Permissão para acessar informações de publicidade -->
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" />
+    
+    <!-- ============================================
+         CONFIGURAÇÃO DO APLICATIVO
+         ============================================ -->
+    
+    <application
+        android:allowBackup="false"
+        android:debuggable="false"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.NetTunnelPro"
+        android:usesCleartextTraffic="false"
+        tools:targetApi="31">
+
+        <!-- ============================================
+             ATIVIDADES PRINCIPAIS
+             ============================================ -->
+        
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.NetTunnelPro.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- ============================================
+             SERVIÇO DE VPN
+             ============================================ -->
+        
+        <service
+            android:name=".service.NexusVpnService"
+            android:exported="true"
+            android:permission="android.permission.BIND_VPN_SERVICE">
+            <intent-filter>
+                <action android:name="android.net.VpnService" />
+            </intent-filter>
+        </service>
+
+        <!-- ============================================
+             SERVIÇO DE SSH TUNNELING
+             ============================================ -->
+        
+        <service
+            android:name=".service.SshTunnelService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+        <!-- ============================================
+             SERVIÇO DE DNS FORWARDING
+             ============================================ -->
+        
+        <service
+            android:name=".service.DnsForwardingService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+        <!-- ============================================
+             SERVIÇO DE KEEP-ALIVE
+             ============================================ -->
+        
+        <service
+            android:name=".service.KeepAliveService"
+            android:exported="false" />
+
+        <!-- ============================================
+             BROADCAST RECEIVERS
+             ============================================ -->
+        
+        <receiver
+            android:name=".receiver.BootCompleteReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".receiver.NetworkChangeReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+                <action android:name="android.net.wifi.WIFI_STATE_CHANGED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- ============================================
+             GOOGLE ADMOB
+             ============================================ -->
+        
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy" />
+
+        <!-- ============================================
+             CONFIGURAÇÃO DE SEGURANÇA
+             ============================================ -->
+        
+        <meta-data
+            android:name="android.webkit.WebView.EnableSafeBrowsing"
+            android:value="true" />
+
+    </application>
+
+</manifest>
