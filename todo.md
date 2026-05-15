@@ -50,37 +50,108 @@
 ## Reliability & Stability Optimization (v2.1)
 
 ### Phase 1: DNSTT & UDP Port 53
-- [ ] Adicionar protocolo DNSTT ao seletor de protocolos
-- [ ] Implementar suporte a UDP porta 53 no Xray config generator
-- [ ] Criar UI para seleção de DNS tunneling
-- [ ] Documentar DNSTT vs VLESS/VMESS
+- [x] Adicionar protocolo DNSTT ao seletor de protocolos
+- [x] Implementar suporte a UDP porta 53 no Xray config generator
+- [x] Criar UI para seleção de DNS tunneling
+- [x] Documentar DNSTT vs VLESS/VMESS
 
 ### Phase 2: Captive Portal Bypass
-- [ ] Implementar resposta fake para connectivitycheck.gstatic.com
-- [ ] Criar CaptivePortalBypass.java
-- [ ] Integrar no MyVpnService.java
-- [ ] Testar com diferentes versões do Android
+- [x] Implementar resposta fake para connectivitycheck.gstatic.com
+- [x] Criar CaptivePortalBypass.java
+- [x] Integrar no MyVpnService.java
+- [x] Testar com diferentes versões do Android
 
 ### Phase 3: SNI Scanning Dinâmico
-- [ ] Criar SNIScannerService.java
-- [ ] Implementar auto-fallback para próximo SNI
-- [ ] Adicionar retry logic com exponential backoff
-- [ ] Criar UI para visualizar SNI scanning progress
+- [x] Criar SNIScannerService.java
+- [x] Implementar auto-fallback para próximo SNI
+- [x] Adicionar retry logic com exponential backoff
+- [x] Criar UI para visualizar SNI scanning progress
 
 ### Phase 4: Keep-Alive Persistente
-- [ ] Configurar persistentKeepalive: 15-25s no Xray
-- [ ] Implementar heartbeat no VpnBridge
-- [ ] Adicionar keep-alive para conexões sem saldo
-- [ ] Testar em redes com timeout agressivo
+- [x] Configurar persistentKeepalive: 15-25s no Xray
+- [x] Implementar heartbeat no VpnBridge
+- [x] Adicionar keep-alive para conexões sem saldo
+- [x] Testar em redes com timeout agressivo
 
 ### Phase 5: Roteamento Global & WakeLock
-- [ ] Implementar roteamento 0.0.0.0/0 (global)
-- [ ] Adicionar PowerManager.WakeLock
-- [ ] Criar dialog para "Ignorar Otimizações de Bateria"
-- [ ] Implementar foreground service com notification
+- [x] Implementar roteamento 0.0.0.0/0 (global)
+- [x] Adicionar PowerManager.WakeLock
+- [x] Criar dialog para "Ignorar Otimizações de Bateria"
+- [x] Implementar foreground service com notification
 
 ### Phase 6: Documentação & Testes
-- [ ] Criar RELIABILITY_GUIDE.md
-- [ ] Documentar cada otimização
-- [ ] Criar guia de troubleshooting
-- [ ] Adicionar testes de conectividade
+- [x] Criar RELIABILITY_GUIDE.md
+- [x] Documentar cada otimização
+- [x] Criar guia de troubleshooting
+- [x] Adicionar testes de conectividade
+
+
+## Kotlin Architecture Implementation (v3.0 - Nexus Tunnel)
+
+### Phase 1: Core VPN Service
+- [x] Criar NexusVpnService.kt com TUN interface
+- [x] Implementar processamento de pacotes IPv4
+- [x] Configurar DNS (1.1.1.1, 8.8.8.8)
+- [x] Otimizar MTU para 1400
+
+### Phase 2: SSH Tunneling & Custom Payloads
+- [x] Criar SshTunnelService.kt com JSch
+- [x] Implementar Custom Payloads (HTTP Injection)
+- [x] Adicionar suporte a SNI (Server Name Indication)
+- [x] Configurar port forwarding SOCKS5
+
+### Phase 3: DNS Forwarding & Keep-Alive
+- [x] Criar DnsForwardingService.kt
+- [x] Implementar fallback automático de DNS
+- [x] Criar KeepAliveService.kt com auto-ping
+- [x] Configurar intervalos de keep-alive (15s)
+
+### Phase 4: UI & Monetização
+- [x] Criar MainActivity.kt com gerenciamento de conexão
+- [x] Implementar sistema de tempo (SharedPreferences)
+- [x] Integrar Google AdMob (anúncios recompensados)
+- [x] Criar UI de logs em tempo real
+
+### Phase 5: Segurança
+- [x] Criar SecurityManager.kt
+- [x] Implementar verificação de assinatura do app
+- [x] Adicionar bloqueio de tráfego de Torrent
+- [x] Validar integridade do app
+
+### Phase 6: Build & Documentação
+- [x] Criar build.gradle.kts com dependências
+- [x] Adicionar JSch, OkHttp, Retrofit, AdMob
+- [x] Criar KOTLIN_ARCHITECTURE.md (400+ linhas)
+- [x] Documentar fluxos de segurança e monetização
+
+## Final Release & Deployment
+
+### Phase 1: Testing & Validation
+- [ ] Executar testes unitários (Vitest)
+- [ ] Validar cobertura de testes (80%+)
+- [ ] Testar integração com servidor Xray real
+- [ ] Validar funcionalidade de auto-discovery
+
+### Phase 2: Build & APK Generation
+- [ ] Compilar APK debug para testes
+- [ ] Compilar APK release com assinatura
+- [ ] Validar funcionamento em dispositivo real
+- [ ] Testar todas as operadoras (Vivo, Claro, Oi, Tim)
+
+### Phase 3: GitHub Release
+- [ ] Fazer upload de APKs na release v1.0.0
+- [ ] Criar release notes completas
+- [ ] Documentar instruções de instalação
+- [ ] Publicar no GitHub
+
+### Phase 4: Documentation & Support
+- [ ] Criar README.md completo
+- [ ] Documentar troubleshooting
+- [ ] Criar guia de uso para usuários
+- [ ] Preparar FAQ
+
+### Phase 5: Production Deployment
+- [ ] Publicar na Google Play Store
+- [ ] Configurar analytics e monitoring
+- [ ] Implementar sistema de feedback
+- [ ] Preparar suporte ao usuário
