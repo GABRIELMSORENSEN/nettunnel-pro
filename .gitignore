@@ -318,3 +318,11 @@ secrets.json
 # IDE secrets
 .vscode/settings.local.json
 .idea/runConfigurations/
+
+reports/
+premium-audit.json
+
+/release-builds/
+/native/.gradle/
+/native/**/build/
+!/native/gradle/wrapper/gradle-wrapper.jar

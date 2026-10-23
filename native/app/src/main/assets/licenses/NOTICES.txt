@@ -1,0 +1,6 @@
+WireGuard Tunnel Library 1.0.20260102
+Copyright 2017-2025 WireGuard LLC. All Rights Reserved.
+Apache License 2.0
+Source: https://git.zx2c4.com/wireguard-android/
+
+AndroidX annotation and collection components: The Android Open Source Project, Apache License 2.0.
