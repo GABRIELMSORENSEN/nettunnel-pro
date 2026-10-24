@@ -138,6 +138,7 @@ export default function Analytics() {
 
   return (
     <div className="min-h-screen bg-[#0A0A0B] text-[#E0E0E6] font-sans">
+      <p className="text-center text-xs text-[#8E9299] p-3">Pr?via visual: os gr?ficos abaixo s?o demonstrativos. Consulte tr?fego e estado reais na tela principal.</p>
       {/* Hardware Surround Effect */}
       <div className="fixed inset-0 pointer-events-none border-[12px] border-[#1A1B1E] z-50 rounded-[24px]" />
       <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_50%_50%,transparent_0%,rgba(0,0,0,0.4)_100%)] z-40" />

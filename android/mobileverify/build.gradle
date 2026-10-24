@@ -1,0 +1,7 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'com.g4t0xx.mobileverify'
+    compileSdk 36
+    defaultConfig { applicationId 'com.g4t0xx.mobileverify'; minSdk 29; targetSdk 36; versionCode 1; versionName 'test-only' }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+}

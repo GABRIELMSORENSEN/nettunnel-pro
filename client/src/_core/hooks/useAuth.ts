@@ -14,6 +14,7 @@ export function useAuth(options?: UseAuthOptions) {
   const utils = trpc.useUtils();
 
   const meQuery = trpc.auth.me.useQuery(undefined, {
+    enabled: !window.NetTunnel && Boolean(import.meta.env.VITE_OAUTH_PORTAL_URL),
     retry: false,
     refetchOnWindowFocus: false,
   });

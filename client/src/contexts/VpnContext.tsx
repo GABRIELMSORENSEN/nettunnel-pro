@@ -1,3 +1,4 @@
+import { nativeVpn } from '../native-vpn';
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
 export interface VpnConfig {
@@ -81,21 +82,28 @@ export function VpnProvider({ children }: { children: React.ReactNode }) {
       addLog(`SNI: ${selectedSNI}`, 'info');
       addLog(`Payload: ${selectedPayload}`, 'info');
       
-      // Simulate Xray configuration
+      const native = nativeVpn();
+      if (!native) throw new Error('A VPN exige o aplicativo Android.');
+      const params = new URLSearchParams({type: vpnConfig.network, security: vpnConfig.tlsServerName ? 'tls' : 'none', sni: vpnConfig.tlsServerName, host: vpnConfig.host});
+      const link = vpnConfig.protocol === 'vmess'
+        ? 'vmess://' + btoa(JSON.stringify({v:'2',ps:'Servidor importado',add:vpnConfig.serverAddress,port:String(vpnConfig.serverPort),id:vpnConfig.uuid,net:vpnConfig.network,host:vpnConfig.host,sni:vpnConfig.tlsServerName,tls:vpnConfig.tlsServerName?'tls':'',path:'/'}))
+        : `${vpnConfig.protocol}://${encodeURIComponent(vpnConfig.uuid)}@${vpnConfig.serverAddress}:${vpnConfig.serverPort}?${params.toString()}`;
+      const imported = JSON.parse(native.configure(link));
+      if (!imported.ok) throw new Error(imported.error);
+      const response = JSON.parse(native.connect());
+      if (!response.ok) throw new Error(response.error);
       setConfig(vpnConfig);
-      addLog(`Conectando ao servidor: ${vpnConfig.serverAddress}:${vpnConfig.serverPort}`, 'info');
-      
-      // Simulate handshake
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      addLog('Handshake TLS iniciado...', 'info');
-      
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      addLog('Tunnel estabelecido com sucesso', 'success');
-      
-      setIsConnected(true);
-      setCurrentIp('203.0.113.42');
-      setLatency(45);
-      setBandwidth(85);
+      const deadline = Date.now() + 90000;
+      while (Date.now() < deadline) {
+        const state = JSON.parse(native.status());
+        if (state.phase === 'error') throw new Error(state.error);
+        if (state.phase === 'connected') {
+          setIsConnected(true); setCurrentIp(state.ip); setLatency(null); setBandwidth(null);
+          addLog('HTTPS verificado pelo servidor.', 'success'); return;
+        }
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+      throw new Error('A conex?o n?o foi confirmada no tempo esperado.');
     } catch (error) {
       addLog(`Erro na conexão: ${error instanceof Error ? error.message : 'Desconhecido'}`, 'error');
       setIsConnected(false);
@@ -109,7 +117,7 @@ export function VpnProvider({ children }: { children: React.ReactNode }) {
       setIsConnecting(true);
       addLog('Desconectando...', 'info');
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      nativeVpn()?.disconnect();
       addLog('Conexão encerrada', 'info');
       
       setIsConnected(false);

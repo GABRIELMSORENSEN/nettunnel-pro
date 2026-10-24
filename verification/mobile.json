@@ -1,0 +1,16 @@
+{
+  "device": "Galaxy A35",
+  "physical_mobile_test": true,
+  "wifi_enabled": false,
+  "usb_internet_relay": false,
+  "packaged_windows_gateway": true,
+  "signed_android_releases": true,
+  "https_ipv4": true,
+  "https_ipv6": true,
+  "exit_matches_pc": true,
+  "cellular_without_vpn_differs": true,
+  "disconnect_reconnect": true,
+  "android_clients_switched": true,
+  "release_stability_samples": 3,
+  "release_stability_interval_seconds": 15
+}

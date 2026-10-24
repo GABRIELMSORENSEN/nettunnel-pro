@@ -1,0 +1,83 @@
+{
+  "bytes_per_sample": 2000000,
+  "samples_per_mode": 3,
+  "endpoint": "https://speed.cloudflare.com/__down",
+  "method": "single HTTPS download including connection setup",
+  "samples": {
+    "cellular": [
+      {
+        "http": 200,
+        "bytes": 2000000,
+        "total_ms": 3241.775805,
+        "ttfb_ms": 920.204653,
+        "mbps_including_setup": 4.935566480359983,
+        "vpn": false,
+        "cellular": true,
+        "wifi": false,
+        "ok": true
+      },
+      {
+        "http": 200,
+        "bytes": 2000000,
+        "total_ms": 6830.706841,
+        "ttfb_ms": 1781.364999,
+        "mbps_including_setup": 2.3423637366433425,
+        "vpn": false,
+        "cellular": true,
+        "wifi": false,
+        "ok": true
+      },
+      {
+        "http": 200,
+        "bytes": 2000000,
+        "total_ms": 2666.532767,
+        "ttfb_ms": 705.019884,
+        "mbps_including_setup": 6.000301289378455,
+        "vpn": false,
+        "cellular": true,
+        "wifi": false,
+        "ok": true
+      }
+    ],
+    "homelink": [
+      {
+        "http": 200,
+        "bytes": 2000000,
+        "total_ms": 9046.468994,
+        "ttfb_ms": 4202.562997,
+        "mbps_including_setup": 1.7686458673115308,
+        "vpn": true,
+        "cellular": true,
+        "wifi": false,
+        "ok": true
+      },
+      {
+        "http": 200,
+        "bytes": 2000000,
+        "total_ms": 7280.384725,
+        "ttfb_ms": 3345.401613,
+        "mbps_including_setup": 2.1976860570373224,
+        "vpn": true,
+        "cellular": true,
+        "wifi": false,
+        "ok": true
+      },
+      {
+        "http": 200,
+        "bytes": 2000000,
+        "total_ms": 6227.872226,
+        "ttfb_ms": 4210.14542,
+        "mbps_including_setup": 2.569095739184165,
+        "vpn": true,
+        "cellular": true,
+        "wifi": false,
+        "ok": true
+      }
+    ]
+  },
+  "median_mbps": {
+    "cellular": 4.935566480359983,
+    "homelink": 2.1976860570373224
+  },
+  "limitation": "Short sequential single-request measurement; not a throughput ceiling or speed guarantee. HomeLink did not improve speed."
+}

@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Xray-android-arm64-v8a.zip",
+    "version": "v26.10.21",
+    "url": "https://github.com/XTLS/Xray-core/releases/download/v26.10.21/Xray-android-arm64-v8a.zip",
+    "digest": "sha256:d81604f35a56c98ea6091142c1c744f4895c7384bc2e1c85cd910612c70794e9"
+  },
+  {
+    "name": "hev-socks5-tunnel.aar",
+    "version": "2.19.1",
+    "url": "https://github.com/heiher/hev-socks5-tunnel/releases/download/2.19.1/hev-socks5-tunnel.aar",
+    "digest": "sha256:107958f7a07051386248ba8dba778b63d8dcefdfb2c3665b0ee9a8c93de5f6ca"
+  }
+]

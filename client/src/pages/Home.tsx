@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { nativeVpn, type TunnelState, type NativeProfile } from '@/native-vpn';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { trpc } from '@/lib/trpc';
 import {
@@ -81,6 +82,9 @@ const PAYLOADS: Payload[] = [
 export default function Home() {
   const { user, logout } = useAuth();
   const [, setLocation] = useLocation();
+  const [profileLink, setProfileLink] = useState('');
+  const lastMessage = useRef('');
+  const previousTraffic = useRef({rx: 0, tx: 0, at: Date.now()});
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [selectedServer, setSelectedServer] = useState(SERVERS[0]);
@@ -99,7 +103,6 @@ export default function Home() {
   // Advanced Features
   const [hotspotEnabled, setHotspotEnabled] = useState(false);
   const [autoHealing, setAutoHealing] = useState(true);
-  const [obfuscationStrength, setObfuscationStrength] = useState(0);
   const [isScanning, setIsScanning] = useState(false);
   const [exitPoint, setExitPoint] = useState<'CLOUDFLARE' | 'VPS'>('CLOUDFLARE');
   const [dpiBypass, setDpiBypass] = useState(true);
@@ -126,109 +129,65 @@ export default function Home() {
 
   // Auto-scroll logs
   useEffect(() => {
-    logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const panel = logEndRef.current?.parentElement;
+    if (panel) panel.scrollTop = panel.scrollHeight;
   }, [logs]);
-
-  // Timer
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isConnected) {
-      const startTime = Date.now();
-      interval = setInterval(() => {
-        const diff = Date.now() - startTime;
-        const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
-        const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
-        const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
-        setStats(prev => ({
-          ...prev,
-          time: `${h}:${m}:${s}`,
-          down: (Math.random() * 5).toFixed(1),
-          up: (Math.random() * 2).toFixed(1)
-        }));
-      }, 1000);
-    } else {
-      setStats({ down: '0.0', up: '0.0', time: '00:00:00' });
-    }
-    return () => clearInterval(interval);
-  }, [isConnected]);
 
   const addLog = (msg: string) => {
     const time = new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
     setLogs(prev => [...prev, `[${time}] ${msg}`].slice(-50));
   };
 
+  useEffect(() => {
+    const refresh = () => {
+      const native = nativeVpn();
+      if (!native) return;
+      try {
+        const state: TunnelState = JSON.parse(native.status());
+        const profile: NativeProfile = JSON.parse(native.profile());
+        if (profile.ok) {
+          setSelectedServer(prev => prev.id === 'imported' && prev.name === profile.name ? prev : { id: 'imported', name: profile.name!, country: 'Imported', flag: '🔐', latency: 0 });
+          setSelectedPayload(prev => prev.id === 'imported' && prev.sni === profile.host ? prev : { id: 'imported', name: profile.protocol!.toUpperCase(), carrier: 'Servidor importado', sni: profile.host!, method: profile.protocol!.toUpperCase() as PayloadMethod });
+        }
+        const connected = state.phase === 'connected';
+        setIsConnected(connected);
+        setIsConnecting(state.phase === 'connecting' || state.phase === 'permission');
+        const seconds = state.seconds || 0;
+        const time = [Math.floor(seconds / 3600), Math.floor(seconds / 60) % 60, seconds % 60].map(v => String(v).padStart(2, '0')).join(':');
+        const previous = previousTraffic.current;
+        const elapsed = Math.max(.1, (Date.now() - previous.at) / 1000);
+        const rx = state.rx || 0, tx = state.tx || 0;
+        setStats({time, down: connected ? (Math.max(0, rx - previous.rx) / elapsed / 1048576).toFixed(2) : '0.00', up: connected ? (Math.max(0, tx - previous.tx) / elapsed / 1048576).toFixed(2) : '0.00'});
+        previousTraffic.current = {rx, tx, at: Date.now()};
+        const message = state.error || (connected ? `HTTPS verificado pelo servidor. IP de saída: ${state.ip}` : state.phase === 'connecting' ? 'Verificando túnel real pelo servidor…' : 'Desconectado.');
+        if (message !== lastMessage.current) { lastMessage.current = message; addLog(message); }
+      } catch { addLog('Não foi possível consultar o serviço VPN.'); }
+    };
+    refresh(); const timer = window.setInterval(refresh, 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   const handleToggle = async () => {
-    if (isConnected) {
-      setIsConnected(false);
-      setObfuscationStrength(0);
-      addLog("Disconnection requested...");
-      addLog("Tunnel closed.");
-      return;
-    }
-
-    setIsConnecting(true);
-    setLogs([]);
-    setObfuscationStrength(0);
-
-    try {
-      addLog(`Initializing Xray-core wrapper...`);
-      await new Promise(r => setTimeout(r, 500));
-      addLog(`Exit Point: ${exitPoint === 'CLOUDFLARE' ? 'Cloudflare Pages (gRPC)' : 'Back-to-Back VPS'}`);
-      addLog(`Protocol: ${selectedPayload.method} | SNI: ${selectedPayload.sni}`);
-
-      // Simulate connection steps
-      switch (selectedPayload.method) {
-        case 'WS+TLS':
-          addLog("Establishing WebSocket over TLS (CDN Edge)...");
-          await new Promise(r => setTimeout(r, 800));
-          setObfuscationStrength(75);
-          break;
-        case 'TROJAN':
-          addLog("Initiating Trojan-GFW obfuscation...");
-          await new Promise(r => setTimeout(r, 1000));
-          setObfuscationStrength(90);
-          break;
-        case 'VLESS':
-        case 'VMESS':
-          addLog("Handshaking with Xray-Core server (gRPC mode)...");
-          await new Promise(r => setTimeout(r, 1000));
-          setObfuscationStrength(95);
-          break;
-        default:
-          addLog("Standard SSH/TLS tunnel initiation...");
-          await new Promise(r => setTimeout(r, 800));
-          setObfuscationStrength(40);
-      }
-
-      addLog("Connected! Tunneling all traffic.");
-      setIsConnected(true);
-      toast.success('VPN Connected Successfully');
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unknown connection error";
-      addLog(`CRITICAL ERROR: ${message}`);
-      setObfuscationStrength(0);
-      setIsConnected(false);
-      toast.error('Connection Failed');
-    } finally {
-      setIsConnecting(false);
-    }
+    const native = nativeVpn();
+    if (!native) { addLog('A conexão VPN requer o aplicativo Android.'); toast.error('Abra o aplicativo Android para conectar.'); return; }
+    if (isConnected) { native.disconnect(); return; }
+    const result = JSON.parse(native.connect());
+    if (!result.ok) { addLog(result.error); toast.error(result.error); setIsServerModalOpen(true); }
+    else { setIsConnecting(true); addLog('Solicitando conexão VPN…'); }
   };
 
   const startScanner = async () => {
-    setIsScanning(true);
-    addLog("Starting Silent SNI Scanner...");
-    const hosts = ['m.whatsapp.net', 'portalrecarga.vivo.com.br', 'm.tim.com.br', 'claro.com.br'];
-    for (const host of hosts) {
-      addLog(`Testing host: ${host}...`);
-      await new Promise(r => setTimeout(r, 1000));
-      if (Math.random() > 0.5) {
-        addLog(`Success! Host ${host} is open.`);
-        setSelectedPayload(prev => ({ ...prev, sni: host }));
-        break;
-      }
-    }
-    setIsScanning(false);
-    addLog("Scanner finished.");
+    addLog('Um SNI não fornece acesso à internet. Importe as credenciais do seu servidor autorizado.');
+    toast.info('Configure o servidor no seletor Server.');
+    setIsServerModalOpen(true);
+  };
+
+  const importServerLink = () => {
+    const native = nativeVpn();
+    if (!native) { toast.error('Importação de servidor disponível no Android.'); return; }
+    const result = JSON.parse(native.configure(profileLink.trim()));
+    if (result.ok) { setProfileLink(''); setIsServerModalOpen(false); addLog('Servidor salvo com criptografia no dispositivo.'); toast.success('Servidor importado'); }
+    else toast.error(result.error);
   };
 
   const handleAddPayload = () => {
@@ -331,7 +290,7 @@ export default function Home() {
             </div>
             <div>
               <h1 className="text-xl font-bold tracking-tight uppercase">NetTunnel <span className="text-red-500">Pro</span></h1>
-              <p className="text-[10px] font-mono text-[#8E9299] tracking-widest uppercase">v5.0.0-merged</p>
+              <p className="text-[10px] font-mono text-[#8E9299] tracking-widest uppercase">v1.0.1 · Xray</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -414,11 +373,11 @@ export default function Home() {
               </div>
             </div>
             <div className="text-right">
-              <p className="text-[10px] font-mono text-[#8E9299] uppercase tracking-wider mb-1">Obfuscation</p>
+              <p className="text-[10px] font-mono text-[#8E9299] uppercase tracking-wider mb-1">Verifica??o</p>
               <p className={cn(
                 "text-lg font-mono font-bold",
-                obfuscationStrength > 80 ? "text-green-500" : obfuscationStrength > 50 ? "text-yellow-500" : "text-red-500"
-              )}>{obfuscationStrength}%</p>
+                isConnected ? "text-green-500" : "text-red-500"
+              )}>{isConnected ? 'TLS' : '—'}</p>
             </div>
           </div>
 
@@ -453,6 +412,7 @@ export default function Home() {
           <div className="flex justify-center relative z-10">
             <button 
               onClick={handleToggle}
+              aria-label={isConnected ? "Desconectar VPN" : "Conectar VPN"}
               disabled={isConnecting}
               className="group relative"
             >
@@ -488,7 +448,7 @@ export default function Home() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-bold">{selectedServer.name}</p>
-                <p className="text-xs text-[#8E9299]">{selectedServer.flag} {selectedServer.latency}ms</p>
+                <p className="text-xs text-[#8E9299]">{selectedServer.flag} {selectedServer.id === 'imported' ? 'Servidor configurado' : 'Exemplo sem credencial'}</p>
               </div>
               <Globe className="w-5 h-5 text-red-500" />
             </div>
@@ -531,10 +491,15 @@ export default function Home() {
             <DialogTitle className="text-white">Select Server</DialogTitle>
           </DialogHeader>
           <div className="space-y-2">
+            <Label htmlFor="server-link">Importar servidor autorizado</Label>
+            <Input id="server-link" type="password" autoComplete="off" value={profileLink} onChange={e => setProfileLink(e.target.value)} placeholder="vless://, vmess:// ou trojan://" className="bg-[#1C1D21] border-[#2A2B2F]" />
+            <Button onClick={importServerLink} disabled={isConnected || isConnecting || !profileLink.trim()}>Salvar servidor</Button>
+            <p className="text-xs text-[#8E9299]">Os locais abaixo são exemplos da interface. Exigem endereço e credenciais reais para conectar.</p>
             {SERVERS.map(server => (
               <button
                 key={server.id}
                 onClick={() => {
+                  if (nativeVpn()) { toast.info("Importe as credenciais desse servidor para conectá-lo."); return; }
                   setSelectedServer(server);
                   setIsServerModalOpen(false);
                 }}
@@ -673,10 +638,11 @@ export default function Home() {
             <DialogTitle className="text-white">Advanced Settings</DialogTitle>
           </DialogHeader>
           <div className="space-y-6">
+            {nativeVpn() && <p className="text-xs text-[#8E9299]">Esses recursos experimentais ainda n?o est?o dispon?veis. A conex?o usa o servidor importado.</p>}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="text-[#8E9299]">Hotspot Mode</Label>
-                <Switch checked={hotspotEnabled} onCheckedChange={setHotspotEnabled} />
+                <Switch disabled={Boolean(nativeVpn())} checked={hotspotEnabled} onCheckedChange={setHotspotEnabled} />
               </div>
               <p className="text-xs text-[#8E9299]">Share VPN via mobile hotspot</p>
             </div>
@@ -684,7 +650,7 @@ export default function Home() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="text-[#8E9299]">Auto Healing</Label>
-                <Switch checked={autoHealing} onCheckedChange={setAutoHealing} />
+                <Switch disabled={Boolean(nativeVpn())} checked={autoHealing} onCheckedChange={setAutoHealing} />
               </div>
               <p className="text-xs text-[#8E9299]">Automatically reconnect on failure</p>
             </div>
@@ -692,7 +658,7 @@ export default function Home() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="text-[#8E9299]">DPI Bypass</Label>
-                <Switch checked={dpiBypass} onCheckedChange={setDpiBypass} />
+                <Switch disabled={Boolean(nativeVpn())} checked={dpiBypass} onCheckedChange={setDpiBypass} />
               </div>
               <p className="text-xs text-[#8E9299]">Enable packet fragmentation</p>
             </div>
@@ -700,14 +666,14 @@ export default function Home() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="text-[#8E9299]">Fragmentation</Label>
-                <Switch checked={fragmentation} onCheckedChange={setFragmentation} />
+                <Switch disabled={Boolean(nativeVpn())} checked={fragmentation} onCheckedChange={setFragmentation} />
               </div>
               <p className="text-xs text-[#8E9299]">Split packets to evade detection</p>
             </div>
 
             <div className="space-y-2">
               <Label className="text-[#8E9299]">Exit Point</Label>
-              <Select value={exitPoint} onValueChange={(value) => setExitPoint(value as 'CLOUDFLARE' | 'VPS')}>
+              <Select disabled={Boolean(nativeVpn())} value={exitPoint} onValueChange={(value) => setExitPoint(value as 'CLOUDFLARE' | 'VPS')}>
                 <SelectTrigger className="bg-[#1C1D21] border-[#2A2B2F] text-white">
                   <SelectValue />
                 </SelectTrigger>

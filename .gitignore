@@ -318,3 +318,16 @@ secrets.json
 # IDE secrets
 .vscode/settings.local.json
 .idea/runConfigurations/
+
+# Downloaded runtime dependencies; rebuild with scripts/prepare_android.py
+android/app/libs/*.aar
+android/app/src/runtime/jniLibs/
+android/app/src/main/assets/licenses/
+android/local.properties
+android/.gradle/
+android/build/
+android/app/build/
+android/web/node_modules/
+
+android/mobileverify/build/
+!android/gradle/wrapper/gradle-wrapper.jar

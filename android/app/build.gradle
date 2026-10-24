@@ -1,0 +1,18 @@
+plugins { id 'com.android.application' }
+android {
+ namespace 'com.g4t0xx.nettunnel'
+ compileSdk 36
+ buildFeatures { buildConfig true }
+ flavorDimensions 'app'
+ productFlavors {
+  nettunnel { dimension 'app'; applicationId 'com.nettunnel.pro'; buildConfigField 'String', 'START_PAGE', '\"index.html\"'; resValue 'string', 'app_name', 'NetTunnel Pro' }
+  homelink { dimension 'app'; versionCode 1; versionName '0.1.0-preview.1'; applicationId 'com.g4t0xx.homelink'; buildConfigField 'String', 'START_PAGE', '\"homelink.html\"'; resValue 'string', 'app_name', 'G4T0XX HomeLink' }
+ }
+ defaultConfig { applicationId 'com.nettunnel.pro'; minSdk 29; targetSdk 36; versionCode 20002; versionName '1.0.1-preview.1'; ndk { abiFilters 'arm64-v8a' } }
+ compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+ sourceSets { main { manifest.srcFile 'src/runtime/AndroidManifest.xml'; java.srcDirs = ['src/runtime/java']; res.srcDirs = ['src/runtime/res']; assets.srcDirs = ['build/generated/ui']; jniLibs.srcDirs = ['src/runtime/jniLibs'] } }
+ packaging { jniLibs { useLegacyPackaging true } }
+ signingConfigs { release { if(System.getenv('G4T0XX_ANDROID_KEYSTORE')) { storeFile file(System.getenv('G4T0XX_ANDROID_KEYSTORE')); storePassword System.getenv('G4T0XX_ANDROID_STORE_PASSWORD'); keyAlias System.getenv('G4T0XX_ANDROID_KEY_ALIAS'); keyPassword System.getenv('G4T0XX_ANDROID_KEY_PASSWORD') } } }
+ buildTypes { debug { applicationIdSuffix '.dev' }; release { minifyEnabled false; if(System.getenv('G4T0XX_ANDROID_KEYSTORE')) signingConfig signingConfigs.release } }
+}
+dependencies { implementation files('libs/hev-socks5-tunnel.aar') }

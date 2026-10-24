@@ -1,6 +1,6 @@
 {
   "name": "nettunnel-pro",
-  "version": "1.0.0",
+  "version": "1.0.1-preview.1",
   "type": "module",
   "license": "MIT",
   "scripts": {
@@ -13,7 +13,9 @@
     "lint:fix": "prettier --write . && tsc --noEmit",
     "prepare": "husky install",
     "test": "vitest run",
-    "db:push": "drizzle-kit generate && drizzle-kit migrate"
+    "db:push": "drizzle-kit generate && drizzle-kit migrate",
+    "prepare:android": "python scripts/prepare_android.py",
+    "build:android-ui": "node scripts/build_android_ui.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.693.0",
